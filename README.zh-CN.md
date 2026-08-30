@@ -19,23 +19,33 @@ source .venv/Scripts/activate
 python -m pip install -r requirements.txt
 
 npm ci
-# 如果存在一些问题你可以尝试npm install 如果仍然存在一些问题请反馈
+# 如果存在一些问题你可以尝试 npm install 如果仍然存在一些问题请反馈
 ```
 
-## 配置
+3. 配置 (必须)
 
-将 `.env.example` 复制为 `discord_bot.env` 并填写你的值：
+将 `.env.example` 复制为 `discord_bot.env` 并填写你的Discord Token
 
 ```bash
 cp .env.example discord_bot.env
 # 然后编辑 discord_bot.env
 ```
 
-* `TOKEN` — 你的 Discord 机器人令牌（必需）
+* `TOKEN` — 你的 Discord 机器人令牌
+
+4. 配置 Badgeworks (可选)
+
+这不是 Molanko 生态的项目 也不是由 lanlan3292 控制的项目 可能会存在一些问题
+如果您不需要你可以执行一下命令然后直接跳到第5步
+
+```bash
+mv cogs/badge.py cogs/badge.py.disabled
+```
+
 * `BADGEWORKS_API_URL` — Badgeworks API 服务器的 URL（默认 `http://localhost:8080`）
 * `BADGEWORKS_API_KEY` — 该服务器的 API 密钥
 
-这两个 `BADGEWORKS_*` 变量都是可选的。机器人没有它们也能运行；只有 `/badge` 命令需要 Badgeworks API 服务器。
+只有 `/badge` 命令需要 Badgeworks API 服务器。
 
 ## Badge 命令（`/badge`）
 
@@ -58,7 +68,7 @@ npm start
 BADGEWORKS_API_KEY=<你的密钥> node server.js
 ```
 
-## 使用方法
+5. 启动
 
 ```bash
 python main.py
