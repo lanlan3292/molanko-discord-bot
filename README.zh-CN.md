@@ -36,6 +36,7 @@ cp .env.example discord_bot.env
 4. 配置 Badgeworks (可选)
 
 这不是 Molanko 生态的项目 也不是由 lanlan3292 控制的项目 可能会存在一些问题
+
 如果您不需要你可以执行一下命令然后直接跳到第5步
 
 ```bash
