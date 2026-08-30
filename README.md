@@ -2,6 +2,8 @@
 
 [简体中文](./README.zh-CN.md)
 
+---
+
 ## 1. Clone the repository
 
 ```bash
@@ -36,7 +38,7 @@ cp .env.example discord_bot.env
 
 ## 4. Configure Badgeworks (optional)
 
-Badgeworks is **not** a Molanko ecosystem project and is not controlled by lanlan3292. It may have issues that are outside the control of this project.
+**Important:** Badgeworks is **not** a Molanko ecosystem project and is not controlled by lanlan3292. It may have issues that are outside the control of this project.
 
 If you do not need Badgeworks, you can disable the cog and skip to step 5:
 

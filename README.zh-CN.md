@@ -2,7 +2,9 @@
 
 [English](./README.md)
 
-1. 拉取仓库
+---
+
+## 1. 拉取仓库
 
 ```bash
 git clone --depth 1 --branch main https://github.com/lanlan3292/molanko-discord-bot.git
@@ -10,7 +12,7 @@ cd molanko-discord-bot
 mv cogs/screenshot_web.py cogs/screenshot_web.py.disabled
 ```
 
-2. 安装库
+## 2. 安装库
 
 ```bash
 python -m venv .venv
@@ -22,7 +24,7 @@ npm ci
 # 如果存在一些问题你可以尝试 npm install 如果仍然存在一些问题请反馈
 ```
 
-3. 配置 (必须)
+## 3. 配置 (必须)
 
 将 `.env.example` 复制为 `discord_bot.env` 并填写你的Discord Token
 
@@ -33,9 +35,9 @@ cp .env.example discord_bot.env
 
 * `TOKEN` — 你的 Discord 机器人令牌
 
-4. 配置 Badgeworks (可选)
+## 4. 配置 Badgeworks (可选)
 
-这不是 Molanko 生态的项目 也不是由 lanlan3292 控制的项目 可能会存在一些问题
+**注意:** 这**不是** Molanko 生态的项目 也**不是**由 lanlan3292 控制的项目 可能会存在一些问题
 
 如果您不需要你可以执行一下命令然后直接跳到第5步
 
@@ -69,7 +71,7 @@ npm start
 BADGEWORKS_API_KEY=<你的密钥> node server.js
 ```
 
-5. 启动
+## 5. 启动
 
 ```bash
 python main.py
