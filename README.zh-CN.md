@@ -16,7 +16,7 @@ mv cogs/screenshot_web.py cogs/screenshot_web.py.disabled
 
 ```bash
 python -m venv .venv
-source .venv/Scripts/activate
+source .venv/bin/activate
 
 python -m pip install -r requirements.txt
 
