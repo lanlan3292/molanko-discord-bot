@@ -1,4 +1,4 @@
-# Molanko Discord 机器人
+# Molanko Discord Bot
 
 [English](./README.md)
 
@@ -10,7 +10,7 @@ cd molanko-discord-bot
 mv cogs/screenshot_web.py cogs/screenshot_web.py.disabled
 ```
 
-1. 安装库
+2. 安装库
 
 ```bash
 python -m venv .venv
