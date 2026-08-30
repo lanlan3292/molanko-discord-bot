@@ -1,5 +1,7 @@
 # Molanko Discord Bot
 
+[简体中文](./README.zh-CN.md)
+
 ```bash
 git clone --depth 1 --branch main https://github.com/lanlan3292/molanko-discord-bot.git
 cd molanko-discord-bot
