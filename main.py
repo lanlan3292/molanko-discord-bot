@@ -25,6 +25,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_FILE = os.path.join(BASE_DIR, "discord_bot.env")
 COGS_DIR = os.path.join(BASE_DIR, "cogs")
 UTILS_DIR = os.path.join(BASE_DIR, "utils")
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
 VERSION_FILE = os.path.join(BASE_DIR, "version")
 

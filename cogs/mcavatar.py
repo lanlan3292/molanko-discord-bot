@@ -1,5 +1,8 @@
 import asyncio
+import base64
 import json
+import logging
+import shutil
 import subprocess
 from io import BytesIO
 from pathlib import Path
@@ -13,16 +16,26 @@ from discord.ext import commands
 
 from utils.i18n import locale_for, t
 
+logger = logging.getLogger(__name__)
 
-# 自定义异常
+SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "process_avatar.js"
+
+
+def check_node_environment() -> tuple[bool, str]:
+    """Check whether Node.js runtime and dependency script exist."""
+    if not shutil.which("node"):
+        return False, "Node.js executable not found in system PATH"
+    if not SCRIPT_PATH.exists():
+        return False, f"Script file not found at '{SCRIPT_PATH}'"
+    return True, ""
+
+
 class AvatarProcessingError(Exception):
     pass
 
 
 async def fetch_skin_from_username(username: str) -> bytes:
-    """从 Mojang API 获取玩家皮肤图片"""
     async with aiohttp.ClientSession() as session:
-        # 1. 获取 UUID
         async with session.get(
             f"https://api.mojang.com/users/profiles/minecraft/{username}"
         ) as resp:
@@ -31,44 +44,39 @@ async def fetch_skin_from_username(username: str) -> bytes:
             data = await resp.json()
             uuid = data["id"]
 
-        # 2. 获取皮肤 URL
         async with session.get(
             f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}"
         ) as resp:
             if resp.status != 200:
-                raise ValueError("Failed to fetch profile")
+                raise ValueError("Failed to fetch profile from Mojang")
             profile = await resp.json()
-            # 查找 texture 属性
+
             textures = next(
-                (prop for prop in profile["properties"] if prop["name"] == "textures"),
+                (prop for prop in profile.get("properties", []) if prop.get("name") == "textures"),
                 None,
             )
             if not textures:
                 raise ValueError("No textures found in profile")
-            import base64
-            decoded = base64.b64decode(textures["value"]).decode("utf-8")
-            import json as jsonlib
-            texture_data = jsonlib.loads(decoded)
-            skin_url = texture_data["textures"]["SKIN"]["url"]
 
-        # 3. 下载皮肤
+            decoded = base64.b64decode(textures["value"]).decode("utf-8")
+            texture_data = json.loads(decoded)
+            skin_url = texture_data.get("textures", {}).get("SKIN", {}).get("url")
+            if not skin_url:
+                raise ValueError("Skin URL missing in texture data")
+
         async with session.get(skin_url) as resp:
             if resp.status != 200:
-                raise ValueError("Failed to download skin")
+                raise ValueError("Failed to download skin image")
             return await resp.read()
 
 
 async def process_skin_nodejs(image_data: bytes, options: dict) -> bytes:
-    """调用 Node.js 脚本处理皮肤图片"""
-    script_path = Path(__file__).parent.parent / "scripts" / "process_avatar.js"
-    if not script_path.exists():
-        raise FileNotFoundError(f"Node.js script not found at {script_path}")
-
+    """Invoke Node.js subprocess to process skin image."""
     options_json = json.dumps(options)
 
     proc = await asyncio.create_subprocess_exec(
         "node",
-        str(script_path),
+        str(SCRIPT_PATH),
         options_json,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
@@ -78,7 +86,7 @@ async def process_skin_nodejs(image_data: bytes, options: dict) -> bytes:
     stdout, stderr = await proc.communicate(input=image_data)
 
     if proc.returncode != 0:
-        error_msg = stderr.decode().strip() or "Unknown Node.js error"
+        error_msg = stderr.decode().strip() or "Unknown Node.js execution error"
         raise AvatarProcessingError(f"Node.js processing failed: {error_msg}")
 
     return stdout
@@ -137,7 +145,7 @@ class MinecraftAvatarCog(commands.Cog):
     @app_commands.choices(
         outline=[
             app_commands.Choice(
-                name=locale_str("Off", i18n_key="mcavatar.choice.outline_off"),
+                name=locale_str("0px", i18n_key="mcavatar.choice.outline_0px"),
                 value=0,
             ),
             app_commands.Choice(
@@ -163,15 +171,23 @@ class MinecraftAvatarCog(commands.Cog):
         upscale48: bool = True,
         average_color: Optional[str] = None,
     ):
-        await interaction.response.defer(thinking=True)
-        locale = locale_for(interaction)
-
-        if not player and not image:
-            await interaction.followup.send(
-                t("mcavatar.error.need_player_or_image", locale=locale),
+        env_ok, env_reason = check_node_environment()
+        if not env_ok:
+            await interaction.response.send_message(
+                f"❌ Unable to process avatar: Missing server dependency ({env_reason}). Please contact the admin.",
                 ephemeral=True,
             )
             return
+
+        if not player and not image:
+            await interaction.response.send_message(
+                t("mcavatar.error.need_player_or_image", locale=locale_for(interaction)),
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.defer(thinking=True)
+        locale = locale_for(interaction)
 
         try:
             if image:
@@ -200,38 +216,29 @@ class MinecraftAvatarCog(commands.Cog):
             "upscale48": upscale48,
         }
 
-        if average_color:
-            if average_color.lower() == "auto":
-                pass
-            else:
-                try:
-                    hex_str = average_color.lstrip("#")
-                    if len(hex_str) == 3:
-                        hex_str = "".join(c * 2 for c in hex_str)
-                    if len(hex_str) != 6:
-                        raise ValueError("Invalid hex length")
-                    r = int(hex_str[0:2], 16)
-                    g = int(hex_str[2:4], 16)
-                    b = int(hex_str[4:6], 16)
-                    options["averageColor"] = {"r": r, "g": g, "b": b}
-                except Exception:
-                    await interaction.followup.send(
-                        t("mcavatar.error.invalid_average_color", locale=locale),
-                        ephemeral=True,
-                    )
-                    return
+        if average_color and average_color.lower() != "auto":
+            try:
+                hex_str = average_color.lstrip("#")
+                if len(hex_str) == 3:
+                    hex_str = "".join(c * 2 for c in hex_str)
+                if len(hex_str) != 6:
+                    raise ValueError("Invalid hex length")
+                r = int(hex_str[0:2], 16)
+                g = int(hex_str[2:4], 16)
+                b = int(hex_str[4:6], 16)
+                options["averageColor"] = {"r": r, "g": g, "b": b}
+            except Exception:
+                await interaction.followup.send(
+                    t("mcavatar.error.invalid_average_color", locale=locale),
+                    ephemeral=True,
+                )
+                return
 
         try:
             result_data = await process_skin_nodejs(image_data, options)
         except AvatarProcessingError as e:
             await interaction.followup.send(
                 t("mcavatar.error.processing", locale=locale, error=e),
-                ephemeral=True,
-            )
-            return
-        except FileNotFoundError:
-            await interaction.followup.send(
-                t("mcavatar.error.script_not_found", locale=locale),
                 ephemeral=True,
             )
             return
@@ -255,4 +262,9 @@ class MinecraftAvatarCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    is_valid, reason = check_node_environment()
+    if not is_valid:
+        logger.warning(f"Skipping loading cogs.mcavatar: {reason}")
+        return
+
     await bot.add_cog(MinecraftAvatarCog(bot))

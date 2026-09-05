@@ -1,18 +1,20 @@
 # Molanko Discord Bot
 
+Molanko Discord Bot 是一个基于 Discord.py 构建的机器人 支持一些没用的功能
+
 [English](./README.md)
 
----
+## 使用
 
-## 1. 拉取仓库
+### 1. 拉取仓库
 
 ```bash
-git clone --depth 1 --branch main https://github.com/lanlan3292/molanko-discord-bot.git
+git clone --depth 1 --single-branch --branch main https://github.com/lanlan3292/molanko-discord-bot.git
 cd molanko-discord-bot
 mv cogs/screenshot_web.py cogs/screenshot_web.py.disabled
 ```
 
-## 2. 安装库
+### 2. 安装库
 
 ```bash
 python -m venv .venv
@@ -24,7 +26,7 @@ npm ci
 # 如果存在一些问题你可以尝试 npm install 如果仍然存在一些问题请反馈
 ```
 
-## 3. 配置 (必须)
+### 3. 配置 (必须)
 
 将 `.env.example` 复制为 `discord_bot.env` 并填写你的Discord Token
 
@@ -35,7 +37,7 @@ cp .env.example discord_bot.env
 
 * `TOKEN` — 你的 Discord 机器人令牌
 
-## 4. 配置 Badgeworks (可选)
+### 4. 配置 Badgeworks (可选)
 
 **注意:** 这**不是** Molanko 生态的项目 也**不是**由 lanlan3292 控制的项目 可能会存在一些问题
 
@@ -50,7 +52,7 @@ mv cogs/badge.py cogs/badge.py.disabled
 
 只有 `/badge` 命令需要 Badgeworks API 服务器。
 
-## Badge 命令（`/badge`）
+### Badge 命令（`/badge`）
 
 通过 [Badgeworks API](https://github.com/ArthurSimin/Badgeworks/tree/api) 生成 [Devins Badge](https://github.com/intergrav/devins-badges)，并以 PNG 附件和 SVG 源码形式发布。
 
@@ -71,7 +73,7 @@ npm start
 BADGEWORKS_API_KEY=<你的密钥> node server.js
 ```
 
-## 5. 启动
+### 5. 启动
 
 ```bash
 python main.py

@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 from io import BytesIO
 from typing import Optional
@@ -11,11 +12,13 @@ from discord.ext import commands
 
 from utils.i18n import locale_for, t
 
+logger = logging.getLogger(__name__)
+
 API_URL = (os.getenv("BADGEWORKS_API_URL") or "http://localhost:8080").rstrip("/")
-API_KEY = os.getenv("BADGEWORKS_API_KEY")
-if not API_KEY:
-    raise ValueError("need BADGEWORKS_API_KEY")
 API_TIMEOUT = 20
+
+def get_api_key() -> Optional[str]:
+    return os.getenv("BADGEWORKS_API_KEY")
 
 
 STYLE_CHOICES = [
@@ -117,7 +120,8 @@ class BadgeCog(commands.Cog):
         fa_icon: Optional[str] = None,
         extra: Optional[str] = None,
     ):
-        if not API_KEY:
+        api_key = get_api_key()
+        if not api_key:
             await interaction.response.send_message(
                 "❌ Badgeworks API key is not configured. Contact the bot admin.",
                 ephemeral=True,
@@ -151,7 +155,7 @@ class BadgeCog(commands.Cog):
                 k, v = pair.split("=", 1)
                 params[k] = v
 
-        headers = {"X-API-Key": API_KEY}
+        headers = {"X-API-Key": api_key}
 
         try:
             async with aiohttp.ClientSession(
@@ -227,4 +231,9 @@ class BadgeCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    api_key = get_api_key()
+    if not api_key:
+        logger.warning("Skipping loading cogs.badge: BADGEWORKS_API_KEY is not set.")
+        return
+
     await bot.add_cog(BadgeCog(bot))

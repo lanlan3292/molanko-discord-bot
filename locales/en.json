@@ -18,7 +18,7 @@
   "mcavatar.param.fill_background": "Whether to fill the background",
   "mcavatar.param.upscale48": "Upscale to 48x48 scaling",
   "mcavatar.param.average_color": "Average color for auto outline/bg: hex (#ff0000) or auto",
-  "mcavatar.choice.outline_off": "Off",
+  "mcavatar.choice.outline_0px": "0px",
   "mcavatar.choice.outline_1px": "1px",
   "mcavatar.choice.outline_2px": "2px",
   "mcavatar.error.need_player_or_image": "You must provide either a player name or an image attachment.",
