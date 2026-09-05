@@ -131,10 +131,10 @@ class Sudo(commands.Cog):
         limit: int = MESSAGE_LIMIT,
     ) -> list[str]:
         """
-        Split text into Discord-safe chunks.
+        Split plain command output into Discord-safe chunks.
 
-        Prefer splitting at newlines so command output
-        remains readable.
+        Prefer splitting at newlines so command output remains readable.
+        The caller must reserve space for any formatting added afterwards.
         """
         if not text:
             return []
@@ -177,46 +177,68 @@ class Sudo(commands.Cog):
         stderr: str,
     ) -> list[str]:
         """
-        Build the response messages while enforcing
-        the maximum message count.
-        """
+        Build response messages while keeping Markdown code blocks intact.
 
+        Output is split BEFORE Markdown code fences are added. This prevents
+        the final safety check from splitting an already-formatted code block.
+        """
         messages = []
 
         header = f"Exit code: `{returncode}`"
 
+        code_block_prefix = "```text\n"
+        code_block_suffix = "\n```"
+        code_block_overhead = (
+            len(code_block_prefix) + len(code_block_suffix)
+        )
+        content_limit = MESSAGE_LIMIT - code_block_overhead
+
         if stdout:
-            stdout_chunks = cls._split_text(stdout)
+            stdout_chunks = cls._split_text(
+                stdout,
+                content_limit,
+            )
 
             for index, chunk in enumerate(stdout_chunks):
                 if index == 0:
                     messages.append(
                         f"{header}\n"
                         f"**stdout**\n"
-                        f"```text\n{chunk}\n```"
+                        f"{code_block_prefix}"
+                        f"{chunk}"
+                        f"{code_block_suffix}"
                     )
                 else:
                     messages.append(
                         f"**stdout (continued)**\n"
-                        f"```text\n{chunk}\n```"
+                        f"{code_block_prefix}"
+                        f"{chunk}"
+                        f"{code_block_suffix}"
                     )
 
         elif stderr:
             messages.append(header)
 
         if stderr:
-            stderr_chunks = cls._split_text(stderr)
+            stderr_chunks = cls._split_text(
+                stderr,
+                content_limit,
+            )
 
             for index, chunk in enumerate(stderr_chunks):
                 if index == 0:
                     messages.append(
                         f"**stderr**\n"
-                        f"```text\n{chunk}\n```"
+                        f"{code_block_prefix}"
+                        f"{chunk}"
+                        f"{code_block_suffix}"
                     )
                 else:
                     messages.append(
                         f"**stderr (continued)**\n"
-                        f"```text\n{chunk}\n```"
+                        f"{code_block_prefix}"
+                        f"{chunk}"
+                        f"{code_block_suffix}"
                     )
 
         if not messages:
@@ -224,34 +246,38 @@ class Sudo(commands.Cog):
                 f"{header}\n(No output)"
             )
 
-        # Make absolutely sure formatting did not push
-        # any message over the Discord limit.
-        safe_messages = []
+        # Limit the total number of messages without ever splitting a
+        # formatted code block.
+        if len(messages) > MAX_MESSAGES:
+            messages = messages[:MAX_MESSAGES]
 
-        for message in messages:
-            if len(message) <= MESSAGE_LIMIT:
-                safe_messages.append(message)
-                continue
+            notice = (
+                "\n\n"
+                "[Output truncated: maximum message count reached.]"
+            )
 
-            # Remove formatting if necessary and split again.
-            safe_messages.extend(
-                cls._split_text(
-                    message,
-                    MESSAGE_LIMIT,
+            last = messages[-1]
+
+            if last.endswith(code_block_suffix):
+                available = (
+                    MESSAGE_LIMIT
+                    - len(notice)
+                    - len(code_block_suffix)
                 )
-            )
 
-        # Limit the total number of messages.
-        if len(safe_messages) > MAX_MESSAGES:
-            safe_messages = safe_messages[:MAX_MESSAGES]
+                body = last[:-len(code_block_suffix)]
+                messages[-1] = (
+                    body[:available]
+                    + notice
+                    + code_block_suffix
+                )
+            else:
+                messages[-1] = (
+                    last[:MESSAGE_LIMIT - len(notice)]
+                    + notice
+                )
 
-            safe_messages[-1] = (
-                safe_messages[-1][:MESSAGE_LIMIT - 80]
-                + "\n\n"
-                + "[Output truncated: maximum message count reached.]"
-            )
-
-        return safe_messages
+        return messages
 
     @app_commands.command(
         name="sudo",
