@@ -13,6 +13,8 @@ from utils.i18n import locale_for, t
 
 API_URL = (os.getenv("BADGEWORKS_API_URL") or "http://localhost:8080").rstrip("/")
 API_KEY = os.getenv("BADGEWORKS_API_KEY")
+if not API_KEY:
+    raise ValueError("need BADGEWORKS_API_KEY")
 API_TIMEOUT = 20
 
 

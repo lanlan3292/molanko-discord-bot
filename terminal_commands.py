@@ -162,7 +162,6 @@ class TerminalCommandHandler:
                 except Exception as exc:
                     print(f"Failed loading {ext}: {exc}")
 
-            await self._sync_commands("after reload")
             return
 
         cog_info = await asyncio.to_thread(self._get_cog_files)

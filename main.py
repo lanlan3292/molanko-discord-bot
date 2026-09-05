@@ -26,6 +26,16 @@ ENV_FILE = os.path.join(BASE_DIR, "discord_bot.env")
 COGS_DIR = os.path.join(BASE_DIR, "cogs")
 UTILS_DIR = os.path.join(BASE_DIR, "utils")
 
+VERSION_FILE = os.path.join(BASE_DIR, "version")
+
+if os.path.isfile(VERSION_FILE):
+    with open(VERSION_FILE, "r", encoding="utf-8") as f:
+        version = f.read().strip()
+
+    os.environ["MOLANKO_BOT_VERSION"] = version
+else:
+    os.environ["MOLANKO_BOT_VERSION"] = "unknown"
+
 load_dotenv(ENV_FILE)
 TOKEN = os.getenv("TOKEN")
 if not TOKEN:
