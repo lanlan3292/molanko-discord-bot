@@ -1,5 +1,5 @@
 import discord
-from core.context import BotContext
+from core.context import BotContext, UserInfo
 from utils.i18n import locale_for
 
 
@@ -16,3 +16,11 @@ class DiscordContext(BotContext):
     @property
     def locale(self) -> str:
         return locale_for(self.interaction)
+
+    @property
+    def user(self) -> UserInfo:
+        u = self.interaction.user
+        return UserInfo(
+            id=str(u.id),
+            name=u.name,
+        )
