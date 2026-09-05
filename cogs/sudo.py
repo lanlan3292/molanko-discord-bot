@@ -102,6 +102,30 @@ class Sudo(commands.Cog):
         )
 
     @staticmethod
+    def _run_bash(
+        command: str,
+    ) -> tuple[int, str, str]:
+        process = subprocess.run(
+            [
+                "bash",
+                "-c",
+                command,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=COMMAND_TIMEOUT,
+            check=False,
+        )
+
+        return (
+            process.returncode,
+            process.stdout,
+            process.stderr,
+        )
+
+    @staticmethod
     def _split_text(
         text: str,
         limit: int = MESSAGE_LIMIT,
@@ -286,6 +310,89 @@ class Sudo(commands.Cog):
             return
 
         # ---------------------------------------------------------
+        # Bash
+        # ---------------------------------------------------------
+
+        if command.lower() == "bash":
+            if not parameter or not parameter.strip():
+                await interaction.response.send_message(
+                    "The Bash parameter cannot be empty.",
+                    #ephemeral=True,
+                )
+                return
+
+            parameter = parameter.strip()
+
+            await interaction.response.defer(
+                #ephemeral=True,
+                thinking=True,
+            )
+
+            logger.warning(
+                "Bash command requested by "
+                "user=%s id=%s command=%r",
+                interaction.user,
+                interaction.user.id,
+                parameter,
+            )
+
+            try:
+                returncode, stdout, stderr = (
+                    await asyncio.to_thread(
+                        self._run_bash,
+                        parameter,
+                    )
+                )
+
+            except FileNotFoundError:
+                await interaction.followup.send(
+                    "Bash was not found on this system.",
+                    #ephemeral=True,
+                )
+                return
+
+            except subprocess.TimeoutExpired:
+                await interaction.followup.send(
+                    f"Command execution timed out after "
+                    f"{COMMAND_TIMEOUT} seconds.",
+                    #ephemeral=True,
+                )
+                return
+
+            except Exception:
+                logger.exception(
+                    "Bash command failed unexpectedly."
+                )
+
+                await interaction.followup.send(
+                    "An unexpected error occurred while executing "
+                    "the command. Check the bot console for details.",
+                    #ephemeral=True,
+                )
+                return
+
+            messages = self._build_messages(
+                returncode,
+                stdout,
+                stderr,
+            )
+
+            # First response.
+            await interaction.followup.send(
+                messages[0],
+                #ephemeral=True,
+            )
+
+            # Additional messages.
+            for message in messages[1:]:
+                await interaction.followup.send(
+                    message,
+                    #ephemeral=True,
+                )
+
+            return
+
+        # ---------------------------------------------------------
         # PowerShell
         # ---------------------------------------------------------
 
@@ -379,4 +486,11 @@ class Sudo(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
+    enable_sudo = (os.getenv("ENABLE_SUDO") or "0").strip()
+
+    if enable_sudo.lower() not in ("1", "true"):
+        logger.info("Skipping loading cogs.sudo: ENABLE_SUDO is not set to 1.")
+        return
+
     await bot.add_cog(Sudo(bot))
+    logger.warning("ENABLE_SUDO is set to 1.")

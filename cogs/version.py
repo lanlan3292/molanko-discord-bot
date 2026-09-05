@@ -5,7 +5,7 @@ from discord.app_commands import locale_str
 from discord.ext import commands
 
 from core.commands.version.command import VersionCommand
-from adapters import DiscordContext   # 主仓库的适配器
+from adapters import DiscordContext
 
 
 class Version(commands.Cog):
