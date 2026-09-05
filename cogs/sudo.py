@@ -283,7 +283,7 @@ class Sudo(commands.Cog):
 
             await self.bot.close()
 
-        return
+            return
 
         # ---------------------------------------------------------
         # PowerShell
