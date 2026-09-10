@@ -1,10 +1,13 @@
+import asyncio
 import base64
+import json
 import logging
-import os
+import shutil
+import subprocess
 from io import BytesIO
+from pathlib import Path
 from typing import Optional
 
-import aiohttp
 import discord
 from discord import app_commands
 from discord.app_commands import locale_str
@@ -14,11 +17,39 @@ from utils.i18n import locale_for, t
 
 logger = logging.getLogger(__name__)
 
-API_URL = (os.getenv("BADGEWORKS_API_URL") or "http://localhost:8080").rstrip("/")
-API_TIMEOUT = 20
+SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "badge.mjs"
+MAX_SVG_CODE_BLOCK = 1800
 
-def get_api_key() -> Optional[str]:
-    return os.getenv("BADGEWORKS_API_KEY")
+
+class BadgeProcessingError(Exception):
+    pass
+
+
+def check_node_environment() -> tuple[bool, str]:
+    """Check whether Node.js runtime and the badge renderer script exist."""
+    if not shutil.which("node"):
+        return False, "Node.js executable not found in system PATH"
+    if not SCRIPT_PATH.exists():
+        return False, f"Script file not found at '{SCRIPT_PATH}'"
+    return True, ""
+
+
+def _coerce(value: str):
+    """Coerce a key=value string from `extra` into a bool/int/float/list/str."""
+    s = value.strip()
+    low = s.lower()
+    if low == "true":
+        return True
+    if low == "false":
+        return False
+    if "," in s:
+        return [_coerce(part) for part in s.split(",")]
+    if s.lstrip("-").isdigit():
+        return int(s)
+    try:
+        return float(s)
+    except ValueError:
+        return s
 
 
 STYLE_CHOICES = [
@@ -50,10 +81,87 @@ ICON_MODE_CHOICES = [
         value="fontawesome",
     ),
     app_commands.Choice(
-        name=locale_str("No icon", i18n_key="badge.choice.icon_none"),
-        value="none",
+        name=locale_str("theSVG", i18n_key="badge.choice.icon_thesvg"),
+        value="thesvg",
     ),
 ]
+
+
+def _build_config(
+    top_text: str,
+    bottom_text: str,
+    style: Optional[app_commands.Choice[str]],
+    preset_key: Optional[str],
+    logo_position: Optional[app_commands.Choice[str]],
+    show_disk: bool,
+    icon_mode: Optional[app_commands.Choice[str]],
+    fa_icon: Optional[str],
+    extra: Optional[str],
+) -> dict:
+    cfg = {
+        "topText": top_text,
+        "bottomText": bottom_text,
+        "showDisk": show_disk,
+    }
+
+    if style:
+        cfg["style"] = style.value
+    if preset_key:
+        cfg["presetKey"] = preset_key.strip().lower()
+    if logo_position:
+        cfg["logoPosition"] = logo_position.value
+
+    mode = icon_mode.value if icon_mode else "preset"
+    if mode == "fontawesome":
+        cfg["iconMode"] = "fontawesome"
+        cfg["faIconClass"] = (fa_icon or "fa-brands fa-github").strip()
+    elif mode == "thesvg":
+        cfg["iconMode"] = "thesvg"
+    else:
+        cfg["iconMode"] = "preset"
+
+    if extra:
+        for pair in extra.split():
+            if "=" not in pair:
+                continue
+            key, value = pair.split("=", 1)
+            cfg[key.strip()] = _coerce(value)
+
+    return cfg
+
+
+async def render_badge_nodejs(config: dict) -> tuple[bytes, str, Optional[int], Optional[int]]:
+    """Invoke the Node.js renderer, returning (png_bytes, svg, width, height)."""
+    config_json = json.dumps(config, ensure_ascii=False)
+
+    proc = await asyncio.create_subprocess_exec(
+        "node",
+        str(SCRIPT_PATH),
+        config_json,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    stdout, stderr = await proc.communicate()
+
+    if proc.returncode != 0:
+        error_msg = stderr.decode(errors="replace").strip() or "Unknown Node.js error"
+        raise BadgeProcessingError(f"renderer failed: {error_msg}")
+
+    try:
+        data = json.loads(stdout.decode("utf-8"))
+    except Exception as e:
+        raise BadgeProcessingError(f"invalid renderer output: {e}") from e
+
+    png_b64 = data.get("png")
+    if not png_b64:
+        raise BadgeProcessingError("renderer returned no PNG data")
+
+    png_bytes = base64.b64decode(png_b64)
+    if not png_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise BadgeProcessingError("renderer returned invalid PNG data")
+
+    return png_bytes, data.get("svg") or "", data.get("width"), data.get("height")
 
 
 class BadgeCog(commands.Cog):
@@ -63,7 +171,7 @@ class BadgeCog(commands.Cog):
     @app_commands.command(
         name="badge",
         description=locale_str(
-            "Generate a Devins Badge via the Badgeworks API",
+            "Generate a Devins-style badge",
             i18n_key="badge.command_description",
         ),
     )
@@ -98,7 +206,7 @@ class BadgeCog(commands.Cog):
             i18n_key="badge.param.fa_icon",
         ),
         extra=locale_str(
-            "Extra options as key=value pairs, e.g. bgStops=#e05a47 bgGradPreset=fire",
+            "Extra options as key=value pairs, e.g. bgStops=#e05a47,#1b1412 useTextGrad=true",
             i18n_key="badge.param.extra",
         ),
     )
@@ -120,10 +228,14 @@ class BadgeCog(commands.Cog):
         fa_icon: Optional[str] = None,
         extra: Optional[str] = None,
     ):
-        api_key = get_api_key()
-        if not api_key:
+        env_ok, env_reason = check_node_environment()
+        if not env_ok:
             await interaction.response.send_message(
-                "❌ Badgeworks API key is not configured. Contact the bot admin.",
+                t(
+                    "badge.error.node",
+                    locale=locale_for(interaction),
+                    reason=env_reason,
+                ),
                 ephemeral=True,
             )
             return
@@ -131,99 +243,48 @@ class BadgeCog(commands.Cog):
         await interaction.response.defer(thinking=True)
         locale = locale_for(interaction)
 
-        params = {
-            "topText": top_text,
-            "bottomText": bottom_text,
-            "showDisk": "true" if show_disk else "false",
-        }
-
-        if style:
-            params["style"] = style.value
-        if preset_key:
-            params["presetKey"] = preset_key
-        if logo_position:
-            params["logoPosition"] = logo_position.value
-        if icon_mode:
-            params["iconMode"] = icon_mode.value
-        if fa_icon:
-            params["faIconInput"] = fa_icon
-
-        if extra:
-            for pair in extra.split():
-                if "=" not in pair:
-                    continue
-                k, v = pair.split("=", 1)
-                params[k] = v
-
-        headers = {"X-API-Key": api_key}
+        config = _build_config(
+            top_text,
+            bottom_text,
+            style,
+            preset_key,
+            logo_position,
+            show_disk,
+            icon_mode,
+            fa_icon,
+            extra,
+        )
 
         try:
-            async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=API_TIMEOUT)
-            ) as session:
-                async with session.get(
-                    f"{API_URL}/api/badge", params=params, headers=headers
-                ) as resp:
-                    if resp.status == 401:
-                        await interaction.followup.send(
-                            t("badge.error.unauthorized", locale=locale),
-                            ephemeral=True,
-                        )
-                        return
-                    if resp.status != 200:
-                        body = await resp.text()
-                        await interaction.followup.send(
-                            t(
-                                "badge.error.api_error",
-                                locale=locale,
-                                status=resp.status,
-                                body=body[:500],
-                            ),
-                            ephemeral=True,
-                        )
-                        return
-
-                    data = await resp.json()
-
-            svg = data.get("svg")
-            png_b64 = data.get("png")
-            width = data.get("width")
-            height = data.get("height")
-
-            if not svg:
-                await interaction.followup.send(
-                    t("badge.error.invalid_response", locale=locale),
-                    ephemeral=True,
-                )
-                return
-
-            files = []
-            if png_b64:
-                png_bytes = base64.b64decode(png_b64)
-                files.append(
-                    discord.File(BytesIO(png_bytes), filename="badge.png")
-                )
-
-            svg_block = f"```svg\n{svg}\n```"
-            size_info = f" {width}x{height}" if width and height else ""
-
+            png_bytes, svg, width, height = await render_badge_nodejs(config)
+        except BadgeProcessingError as e:
             await interaction.followup.send(
-                content=t(
-                    "badge.result",
-                    locale=locale,
-                    size=size_info,
-                )
-                + "\n"
-                + svg_block,
-                files=files,
-            )
-
-        except aiohttp.ClientError as e:
-            await interaction.followup.send(
-                t("badge.error.connection", locale=locale, error=e),
+                t("badge.error.processing", locale=locale, error=e),
                 ephemeral=True,
             )
+            return
         except Exception as e:
+            await interaction.followup.send(
+                t("badge.error.unexpected", locale=locale, error=e),
+                ephemeral=True,
+            )
+            return
+
+        files = [discord.File(BytesIO(png_bytes), filename="badge.png")]
+
+        size_info = f" {width}x{height}" if width and height else ""
+        content = t("badge.result", locale=locale, size=size_info)
+
+        if svg and len(svg) <= MAX_SVG_CODE_BLOCK:
+            content += "\n```svg\n" + svg + "\n```"
+        elif svg:
+            files.append(
+                discord.File(BytesIO(svg.encode("utf-8")), filename="badge.svg")
+            )
+
+        try:
+            await interaction.followup.send(content=content, files=files)
+        except (discord.Forbidden, discord.HTTPException) as e:
             await interaction.followup.send(
                 t("badge.error.unexpected", locale=locale, error=e),
                 ephemeral=True,
@@ -231,9 +292,9 @@ class BadgeCog(commands.Cog):
 
 
 async def setup(bot: commands.Bot):
-    api_key = get_api_key()
-    if not api_key:
-        logger.warning("Skipping loading cogs.badge: BADGEWORKS_API_KEY is not set.")
+    ok, reason = check_node_environment()
+    if not ok:
+        logger.warning("Skipping loading cogs.badge: %s", reason)
         return
 
     await bot.add_cog(BadgeCog(bot))
