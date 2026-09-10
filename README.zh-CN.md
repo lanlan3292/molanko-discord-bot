@@ -51,6 +51,18 @@ mv cogs/badge.py cogs/badge.py.disabled
 
 徽章通过 Node.js（`scripts/badge.mjs`）渲染，因此需要安装 Node 依赖（已在第 2 步的 `npm ci` 中完成）。无需额外配置。
 
+先填写两个必填文本字段，然后在 `icon` 中输入文字，即可搜索全部内置预设/Simple Icons。例如：
+
+```text
+/badge top_text:"Available on" bottom_text:"GitHub" icon:github
+/badge top_text:"Built with" bottom_text:"Python" icon:python style:compact
+/badge top_text:"Plain" bottom_text:"Text badge" logo_position:无
+/badge top_text:"Powered by" bottom_text:"Font Awesome" fontawesome_icon:"fa-brands fa-discord"
+/badge top_text:"From" bottom_text:"theSVG" thesvg_slug:docker
+```
+
+`icon` 使用本地内置图标列表。填写 `fontawesome_icon` 或 `thesvg_slug` 时会自动选择对应来源，无需同时设置 `icon_mode`。若设置了 `icon_mode`，它必须与唯一的来源字段匹配；互相冲突的来源字段会被拒绝。选择 `logo_position:无` 可生成不带图标的徽章。
+
 ### 5. 启动
 
 ```bash

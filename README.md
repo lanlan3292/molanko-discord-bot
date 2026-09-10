@@ -52,6 +52,18 @@ The `/badge` command generates a [Devins Badge](https://github.com/intergrav/dev
 
 It renders through Node.js (`scripts/badge.mjs`), so it needs the Node dependencies installed (done by `npm ci` in step 2). No additional configuration is needed.
 
+Start with the two required text fields, then type in `icon` to search every bundled preset/Simple Icon. Examples:
+
+```text
+/badge top_text:"Available on" bottom_text:"GitHub" icon:github
+/badge top_text:"Built with" bottom_text:"Python" icon:python style:compact
+/badge top_text:"Plain" bottom_text:"Text badge" logo_position:None
+/badge top_text:"Powered by" bottom_text:"Font Awesome" fontawesome_icon:"fa-brands fa-discord"
+/badge top_text:"From" bottom_text:"theSVG" thesvg_slug:docker
+```
+
+`icon` uses the local bundled icon list. Supplying `fontawesome_icon` or `thesvg_slug` automatically selects that source, so `icon_mode` is optional. If `icon_mode` is supplied, it must match the single source-specific field; conflicting source fields are rejected. Choose `logo_position:None` for no icon.
+
 ### 5. Start the bot
 
 ```bash
