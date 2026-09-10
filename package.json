@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "molanko-avatar-generator": "github:lanlan3292/molanko-avatar-generator",
-    "makeitaquote": "^10.3.2"
+    "makeitaquote": "^10.3.2",
+    "@napi-rs/canvas": "^1.0.9",
+    "@resvg/resvg-js": "^2.6.2"
   }
 }

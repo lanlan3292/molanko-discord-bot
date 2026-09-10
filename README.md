@@ -38,43 +38,19 @@ cp .env.example discord_bot.env
 
 * `TOKEN` — your Discord bot token
 
-### 4. Configure Badgeworks (optional)
+### 4. Badge command (`/badge`)
 
 **Important:** Badgeworks is **not** a Molanko ecosystem project and is not controlled by lanlan3292. It may have issues that are outside the control of this project.
 
-If you do not need Badgeworks, you can disable the cog and skip to step 5:
+If you do not need the badge command, you can disable the cog:
 
 ```bash
 mv cogs/badge.py cogs/badge.py.disabled
 ```
 
-If you do use Badgeworks, configure the following variables:
+The `/badge` command generates a [Devins Badge](https://github.com/intergrav/devins-badges) locally and posts it as a PNG attachment together with the SVG source. Badges are rendered by the vendored [Badgeworks](https://github.com/ArthurSimin/Badgeworks) core (`badgeworks/`, no external server or API key required).
 
-* `BADGEWORKS_API_URL` — URL of the Badgeworks API server (default `http://localhost:8080`)
-* `BADGEWORKS_API_KEY` — API key for the server
-
-Only the `/badge` command requires a Badgeworks API server.
-
-#### Badge command (`/badge`)
-
-Generates a [Devins Badge](https://github.com/intergrav/devins-badges) via the [Badgeworks API](https://github.com/ArthurSimin/Badgeworks/tree/api) and posts it as a PNG attachment together with the SVG source.
-
-The command requires `BADGEWORKS_API_URL` and `BADGEWORKS_API_KEY` to be set, and the bot must be able to reach a Badgeworks API server. You can deploy your own server from the Badgeworks `api` branch:
-
-```bash
-git clone -b api https://github.com/ArthurSimin/Badgeworks.git
-cd Badgeworks
-npm install
-# Generate a key (printed once):
-node scripts/manage-keys.js generate
-npm start
-```
-
-For a stable key that survives restarts and updates, run the server with the environment variable instead of relying on `keys.json`:
-
-```bash
-BADGEWORKS_API_KEY=<your-key> node server.js
-```
+It renders through Node.js (`scripts/badge.mjs`), so it needs the Node dependencies installed (done by `npm ci` in step 2). No additional configuration is needed.
 
 ### 5. Start the bot
 
