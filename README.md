@@ -38,43 +38,31 @@ cp .env.example discord_bot.env
 
 * `TOKEN` — your Discord bot token
 
-### 4. Configure Badgeworks (optional)
+### 4. Badge command (`/badge`)
 
 **Important:** Badgeworks is **not** a Molanko ecosystem project and is not controlled by lanlan3292. It may have issues that are outside the control of this project.
 
-If you do not need Badgeworks, you can disable the cog and skip to step 5:
+If you do not need the badge command, you can disable the cog:
 
 ```bash
 mv cogs/badge.py cogs/badge.py.disabled
 ```
 
-If you do use Badgeworks, configure the following variables:
+The `/badge` command generates a [Devins Badge](https://github.com/intergrav/devins-badges) locally and posts it as a PNG attachment together with the SVG source. Badges are rendered by the vendored [Badgeworks](https://github.com/ArthurSimin/Badgeworks) core (`badgeworks/`, no external server or API key required).
 
-* `BADGEWORKS_API_URL` — URL of the Badgeworks API server (default `http://localhost:8080`)
-* `BADGEWORKS_API_KEY` — API key for the server
+It renders through Node.js (`scripts/badge.mjs`), so it needs the Node dependencies installed (done by `npm ci` in step 2). No additional configuration is needed.
 
-Only the `/badge` command requires a Badgeworks API server.
+Start with the two required text fields, then type in `icon` to search every bundled preset/Simple Icon. Examples:
 
-#### Badge command (`/badge`)
-
-Generates a [Devins Badge](https://github.com/intergrav/devins-badges) via the [Badgeworks API](https://github.com/ArthurSimin/Badgeworks/tree/api) and posts it as a PNG attachment together with the SVG source.
-
-The command requires `BADGEWORKS_API_URL` and `BADGEWORKS_API_KEY` to be set, and the bot must be able to reach a Badgeworks API server. You can deploy your own server from the Badgeworks `api` branch:
-
-```bash
-git clone -b api https://github.com/ArthurSimin/Badgeworks.git
-cd Badgeworks
-npm install
-# Generate a key (printed once):
-node scripts/manage-keys.js generate
-npm start
+```text
+/badge top_text:"Available on" bottom_text:"GitHub" icon:github
+/badge top_text:"Built with" bottom_text:"Python" icon:python style:compact
+/badge top_text:"Plain" bottom_text:"Text badge" logo_position:None
+/badge top_text:"Powered by" bottom_text:"Font Awesome" fontawesome_icon:"fa-brands fa-discord"
+/badge top_text:"From" bottom_text:"theSVG" thesvg_slug:docker
 ```
 
-For a stable key that survives restarts and updates, run the server with the environment variable instead of relying on `keys.json`:
-
-```bash
-BADGEWORKS_API_KEY=<your-key> node server.js
-```
+`icon` uses the local bundled icon list. Supplying `fontawesome_icon` or `thesvg_slug` automatically selects that source, so `icon_mode` is optional. If `icon_mode` is supplied, it must match the single source-specific field; conflicting source fields are rejected. Choose `logo_position:None` for no icon.
 
 ### 5. Start the bot
 
