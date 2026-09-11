@@ -260,5 +260,7 @@
   "badge.error.icon_source_conflict": "❌ Choose only one icon source: icon, fontawesome_icon, or thesvg_slug. If icon_mode is set, use only the matching source field.",
   "badge.error.processing": "❌ Badge generation failed: {error}",
   "badge.error.unexpected": "❌ Unexpected error: {error}",
-  "badge.result": "✅ Badge generated{size}"
+  "badge.result": "✅ Badge generated{size}",
+
+  "sudo.command_description": "Execute an administrative command."
 }

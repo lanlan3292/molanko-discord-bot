@@ -254,5 +254,7 @@
   "badge.error.icon_source_conflict": "❌ 只能选择一个图标来源：icon、fontawesome_icon 或 thesvg_slug。若已设置 icon_mode，请只填写与其匹配的来源字段。",
   "badge.error.processing": "❌ 徽章生成失败: {error}",
   "badge.error.unexpected": "❌ 发生意外错误: {error}",
-  "badge.result": "✅ 徽章已生成{size}"
+  "badge.result": "✅ 徽章已生成{size}",
+
+  "sudo.command_description": "执行管理命令"
 }

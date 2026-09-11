@@ -8,6 +8,9 @@ import sys
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.app_commands import locale_str
+
+from utils.i18n import locale_for, t
 
 logger = logging.getLogger(__name__)
 
@@ -280,7 +283,10 @@ class Sudo(commands.Cog):
 
     @app_commands.command(
         name="sudo",
-        description="Execute an administrative command.",
+        description=locale_str(
+            "Execute an administrative command.",
+            i18n_key="sudo.command_description",
+        ),
     )
     @app_commands.describe(
         command="Command.",
