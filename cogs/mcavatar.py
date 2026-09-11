@@ -19,11 +19,11 @@ from utils.i18n import locale_for, t
 
 logger = logging.getLogger(__name__)
 
-SCRIPT_DIR = os.getenv(
-    "SCRIPT_DIR",
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"),
+CORE_SCRIPTS_DIR = os.getenv(
+    "CORE_SCRIPTS_DIR",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "CORE", "scripts"),
 )
-SCRIPT_PATH = Path(SCRIPT_DIR) / "process_avatar.js"
+SCRIPT_PATH = Path(CORE_SCRIPTS_DIR) / "process_avatar.js"
 
 
 class MinecraftAvatarCog(commands.Cog):

@@ -28,6 +28,10 @@ UTILS_DIR = os.path.join(BASE_DIR, "utils")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 SCRIPT_DIR = os.path.join(BASE_DIR, "scripts")
 
+CORE_DIR = os.path.join(BASE_DIR, "core")
+CORE_SCRIPTS_DIR = os.path.join(CORE_DIR, "scripts")
+CORE_COMMANDS_DIR = os.path.join(CORE_DIR, "commands")
+
 VERSION_FILE = os.path.join(BASE_DIR, "version")
 
 if os.path.isfile(VERSION_FILE):
