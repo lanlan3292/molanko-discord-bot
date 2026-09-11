@@ -4,6 +4,7 @@ import json
 import logging
 import shutil
 import subprocess
+import os
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
@@ -18,7 +19,8 @@ from utils.i18n import locale_for, t
 
 logger = logging.getLogger(__name__)
 
-SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "process_avatar.js"
+SCRIPT_DIR = os.getenv("SCRIPT_DIR", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+SCRIPT_PATH = Path(SCRIPT_DIR) / "process_avatar.js"
 
 
 def check_node_environment() -> tuple[bool, str]:

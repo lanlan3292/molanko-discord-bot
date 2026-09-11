@@ -1,6 +1,6 @@
 import asyncio
 import random
-
+import os
 import discord
 from discord import app_commands
 from discord.app_commands import locale_str
@@ -8,11 +8,12 @@ from discord.ext import commands
 
 from utils.i18n import locale_for, t
 
+max_attempts = int(os.getenv("COMMAND_PICKAPPLE_MAX_ATTEMPTS", 1))
 
 class PickApple(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.max_attempts = 1
+        self.max_attempts = max_attempts
 
     @app_commands.command(
         name="pickapple",

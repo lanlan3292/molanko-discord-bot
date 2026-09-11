@@ -11,19 +11,18 @@ from discord.ext import commands
 
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-SUDOER_FILE = os.path.join(DATA_DIR, "sudoer.json")
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+SUDOER_FILE = os.getenv("SUDOER_FILE", os.path.join(DATA_DIR, "sudoer.json"))
 
 # Discord's message limit is 2000 characters.
 # Keep some room for formatting.
-MESSAGE_LIMIT = 1900
+MESSAGE_LIMIT = int(os.getenv("COMMAND_SUDO_MESSAGE_LIMIT", 1900))
 
 # Maximum number of messages that can be sent for one command.
-MAX_MESSAGES = 5
+MAX_MESSAGES = int(os.getenv("COMMAND_SUDO_MAX_MESSAGES", 5))
 
 # Maximum execution time for one PowerShell command.
-COMMAND_TIMEOUT = 30
+COMMAND_TIMEOUT = int(os.getenv("COMMAND_SUDO_COMMAND_TIMEOUT", 30))
 
 
 class Sudo(commands.Cog):

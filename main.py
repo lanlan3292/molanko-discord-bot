@@ -26,6 +26,7 @@ ENV_FILE = os.path.join(BASE_DIR, "discord_bot.env")
 COGS_DIR = os.path.join(BASE_DIR, "cogs")
 UTILS_DIR = os.path.join(BASE_DIR, "utils")
 DATA_DIR = os.path.join(BASE_DIR, "data")
+SCRIPT_DIR = os.path.join(BASE_DIR, "scripts")
 
 VERSION_FILE = os.path.join(BASE_DIR, "version")
 
@@ -41,6 +42,17 @@ load_dotenv(ENV_FILE)
 TOKEN = os.getenv("TOKEN")
 if not TOKEN:
     raise ValueError("TOKEN not found in discord_bot.env")
+
+PROXY = (
+    os.getenv("PROXY")
+    or os.getenv("ALL_PROXY")
+    or os.getenv("HTTP_PROXY")
+    or os.getenv("HTTPS_PROXY")
+    or None
+)
+
+if PROXY:
+    logger.info("Proxy: %s", PROXY)
 
 intents = discord.Intents.default()
 
@@ -67,6 +79,7 @@ class MyBot(commands.Bot):
             command_prefix="!",
             intents=intents,
             tree_cls=LoggingCommandTree,
+            proxy=PROXY,
         )
         self.cogs_dir = COGS_DIR
         self.utils_dir = UTILS_DIR
@@ -230,8 +243,8 @@ class MyBot(commands.Bot):
         if not interaction.response.is_done():
             try:
                 await interaction.response.send_message(
-                    "❌ 命令执行出错，请查看控制台日志。\n"
-                    f"错误类型：{type(error).__name__}",
+                    "❌ command execution failed, please check the console logs.\n"
+                    f"Error: {type(error).__name__}",
                     ephemeral=True,
                 )
             except Exception:
