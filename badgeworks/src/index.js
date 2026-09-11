@@ -232,8 +232,8 @@ export function listIcons() {
 // ---------------------------------------------------------------------------
 const textMeasurementCache = new Map();
 
-// Bundled Inter static weights (SIL OFL-1.1) — the same family the web app
-// loads from Google Fonts, so measured widths match the browser 1:1.
+// Inter static weights (SIL OFL-1.1). Fonts are downloaded on first use and
+// cached under badgeworks/fonts/ (this directory must be gitignored).
 const INTER_FONT_FILES = [
   'Inter-Regular.ttf',  // 400
   'Inter-Medium.ttf',   // 500
@@ -241,39 +241,123 @@ const INTER_FONT_FILES = [
   'Inter-Bold.ttf'      // 700
 ];
 
-const FONT_DIR = new URL('../fonts/', import.meta.url);
+// Reliable CDN (jsDelivr npm package inter-font@3.19.0)
+const INTER_FONT_CDN_BASE = 'https://cdn.jsdelivr.net/npm/inter-font@3.19.0/ttf/';
 
-function interFontPaths() {
-  return INTER_FONT_FILES.map((f) => fileURLToPath(new URL(f, FONT_DIR)));
+const FONT_DIR = new URL('../fonts/', import.meta.url);
+const FONT_DIR_PATH = fileURLToPath(FONT_DIR);
+
+import { mkdir, access, writeFile } from 'node:fs/promises';
+import { constants as fsConstants } from 'node:fs';
+
+/** Ensure a single font file exists locally; download from CDN if missing. */
+async function ensureFontFile(filename) {
+  const localPath = fileURLToPath(new URL(filename, FONT_DIR));
+  try {
+    await access(localPath, fsConstants.R_OK);
+    return localPath; // already present
+  } catch {
+    // need to download
+  }
+
+  await mkdir(FONT_DIR_PATH, { recursive: true });
+
+  const url = INTER_FONT_CDN_BASE + filename;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to download ${filename}: HTTP ${res.status}`);
+  }
+  const buf = Buffer.from(await res.arrayBuffer());
+  await writeFile(localPath, buf);
+  return localPath;
+}
+
+/** Download all required Inter fonts (idempotent). Returns array of local paths. */
+async function ensureInterFonts() {
+  const paths = [];
+  for (const f of INTER_FONT_FILES) {
+    try {
+      paths.push(await ensureFontFile(f));
+    } catch (err) {
+      // one missing font is non-fatal; measurement will fall back to heuristic
+      console.warn(`[badgeworks] could not obtain font ${f}:`, err.message);
+    }
+  }
+  return paths;
 }
 
 // Lazily initialised 2D context (skia) used to measure text — mirrors the
 // browser's `ctx.measureText()` call from the original app.
 let _ctx = null;
 let _ctxTried = false;
+let _fontsReady = null; // Promise that resolves when fonts are ensured
 
 function getMeasureContext() {
   if (_ctxTried) return _ctx;
   _ctxTried = true;
-  try {
-    const { GlobalFonts, createCanvas } = require('@napi-rs/canvas');
-    let registered = false;
-    if (GlobalFonts && typeof GlobalFonts.registerFromPath === 'function') {
-      for (const path of interFontPaths()) {
-        try {
-          if (GlobalFonts.registerFromPath(path, 'Inter')) registered = true;
-        } catch {
-          // keep going — one bad file should not break the rest
+
+  // Kick off font download (non-blocking for the first call; subsequent
+  // measureText calls will use the context once ready).
+  if (!_fontsReady) {
+    _fontsReady = ensureInterFonts().then((paths) => {
+      try {
+        const { GlobalFonts, createCanvas } = require('@napi-rs/canvas');
+        let registered = false;
+        if (GlobalFonts && typeof GlobalFonts.registerFromPath === 'function') {
+          for (const path of paths) {
+            try {
+              if (GlobalFonts.registerFromPath(path, 'Inter')) registered = true;
+            } catch {
+              // keep going — one bad file should not break the rest
+            }
+          }
         }
+        if (registered) {
+          const canvas = createCanvas(10, 10);
+          _ctx = canvas.getContext('2d');
+        }
+      } catch {
+        _ctx = null;
       }
-    }
-    if (!registered) return (_ctx = null);
-    const canvas = createCanvas(10, 10);
-    _ctx = canvas.getContext('2d');
-  } catch {
-    _ctx = null;
+      return _ctx;
+    }).catch(() => {
+      _ctx = null;
+      return null;
+    });
   }
+
+  // If fonts are already ready, return the context immediately.
+  // Otherwise return null so the caller falls back to the heuristic.
+  // (A later measureText call will pick up the real context.)
   return _ctx;
+}
+
+// Optional: expose a way to pre-warm fonts (e.g. at bot startup)
+export async function preloadInterFonts() {
+  if (!_fontsReady) {
+    _fontsReady = ensureInterFonts().then((paths) => {
+      try {
+        const { GlobalFonts, createCanvas } = require('@napi-rs/canvas');
+        let registered = false;
+        if (GlobalFonts && typeof GlobalFonts.registerFromPath === 'function') {
+          for (const path of paths) {
+            try {
+              if (GlobalFonts.registerFromPath(path, 'Inter')) registered = true;
+            } catch { /* ignore */ }
+          }
+        }
+        if (registered) {
+          const canvas = createCanvas(10, 10);
+          _ctx = canvas.getContext('2d');
+        }
+      } catch {
+        _ctx = null;
+      }
+      _ctxTried = true;
+      return _ctx;
+    });
+  }
+  return _fontsReady;
 }
 
 function estimateTextWidth(text, size, weight) {
@@ -881,13 +965,22 @@ export async function svgToPng(svg, opts) {
       'PNG export requires the "@resvg/resvg-js" package. Install it, or use generateBadge() for SVG output.'
     );
   }
+
+  // 确保字体已下载并拿到本地路径
+  const fontFiles = await ensureInterFonts();
+
   const resvgOpts = Object.assign(
     {
       fitTo: { mode: 'zoom', value: scale },
-      font: { fontFiles: interFontPaths(), loadSystemFonts: false, defaultFontFamily: 'Inter' }
+      font: {
+        fontFiles,
+        loadSystemFonts: false,
+        defaultFontFamily: 'Inter'
+      }
     },
     options.resvg || {}
   );
+
   // Merge any caller-supplied font options without silently dropping ours.
   if (options.resvg && options.resvg.font && Array.isArray(options.resvg.font.fontFiles)) {
     resvgOpts.font = {
@@ -898,6 +991,7 @@ export async function svgToPng(svg, opts) {
         : resvgOpts.font.fontFiles
     };
   }
+
   const resvg = new resvgMod.Resvg(svg, resvgOpts);
   return resvg.render().asPng();
 }

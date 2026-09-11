@@ -8,3 +8,6 @@ testsc.py
 node_modules
 /data/
 .makeitaquote
+badgeworks/fonts/*.ttf
+badgeworks/fonts/*.otf
+!badgeworks/fonts/LICENSE*
