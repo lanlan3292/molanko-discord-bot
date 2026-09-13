@@ -60,9 +60,10 @@ Start with the two required text fields, then type in `icon` to search every bun
 /badge top_text:"Plain" bottom_text:"Text badge" logo_position:None
 /badge top_text:"Powered by" bottom_text:"Font Awesome" fontawesome_icon:"fa-brands fa-discord"
 /badge top_text:"From" bottom_text:"theSVG" thesvg_slug:docker
+/badge top_text:"Created with" bottom_text:"My Logo" image:<upload a PNG/SVG>
 ```
 
-`icon` uses the local bundled icon list. Supplying `fontawesome_icon` or `thesvg_slug` automatically selects that source, so `icon_mode` is optional. If `icon_mode` is supplied, it must match the single source-specific field; conflicting source fields are rejected. Choose `logo_position:None` for no icon.
+`icon` uses the local bundled icon list. Supplying `fontawesome_icon`, `thesvg_slug`, or an `image` attachment automatically selects that source, so `icon_mode` is optional. Upload an image (PNG/JPG/SVG) via the `image` parameter to use it as the badge logo. If `icon_mode` is supplied, it must match the single source-specific field; conflicting source fields are rejected. Choose `logo_position:None` for no icon.
 
 ### 5. Start the bot
 
