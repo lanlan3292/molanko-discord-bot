@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.app_commands import locale_str
 from discord.ext import commands
 
-from core.commands.whoami.command import WhoAmICommand
+from commands.commands.whoami.command import WhoAmICommand
 from adapters import DiscordContext
 
 

@@ -1,7 +1,7 @@
 from io import BytesIO
 
 import discord
-from core.context import BotContext, UserInfo
+from commands.context import BotContext, UserInfo
 from utils.i18n import locale_for
 
 

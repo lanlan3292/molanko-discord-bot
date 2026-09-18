@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.app_commands import locale_str
 from discord.ext import commands
 
-from core.commands.version.command import VersionCommand
+from commands.commands.version.command import VersionCommand
 from adapters import DiscordContext
 
 

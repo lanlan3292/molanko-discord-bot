@@ -9,8 +9,8 @@ from discord.app_commands import locale_str
 from discord.ext import commands
 
 from adapters import DiscordContext
-from core.commands.mcavatar.command import McAvatarCommand
-from core.commands.mcavatar.service import (
+from commands.commands.mcavatar.command import McAvatarCommand
+from commands.commands.mcavatar.service import (
     AvatarProcessingError,
     McAvatarOptions,
     McAvatarService,
@@ -19,11 +19,11 @@ from utils.i18n import locale_for, t
 
 logger = logging.getLogger(__name__)
 
-CORE_SCRIPTS_DIR = os.getenv(
-    "CORE_SCRIPTS_DIR",
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "CORE", "scripts"),
+commands_SCRIPTS_DIR = os.getenv(
+    "commands_SCRIPTS_DIR",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "commands", "scripts"),
 )
-SCRIPT_PATH = Path(CORE_SCRIPTS_DIR) / "process_avatar.js"
+SCRIPT_PATH = Path(commands_SCRIPTS_DIR) / "process_avatar.js"
 
 
 class MinecraftAvatarCog(commands.Cog):
