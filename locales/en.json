@@ -269,5 +269,13 @@
   "xujiayin_llm.response": "I'm doing this as charity so you guys can call the API. If you can already call the API, why would I give you the real model?",
 
   "jrrp.command_description": "Check today's luck",
-  "jrrp.param.user": "User to check (defaults to yourself)"
+  "jrrp.param.user": "User to check (defaults to yourself)",
+  "jrrp.response": "Daily Luck: **{score}** ({level})",
+  "jrrp.level.terrible": "Terrible",
+  "jrrp.level.poor": "Poor",
+  "jrrp.level.average": "Average",
+  "jrrp.level.fair": "Fair",
+  "jrrp.level.good": "Good",
+  "jrrp.level.excellent": "Excellent",
+  "jrrp.level.max": "Jackpot"
 }

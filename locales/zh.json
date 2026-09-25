@@ -263,5 +263,13 @@
   "xujiayin_llm.response": "做公益就是为了你们调用，你们都调用了我为什么还要给你们真模型",
 
   "jrrp.command_description": "查询今日人品",
-  "jrrp.param.user": "要查询的用户 (默认为自己)"
+  "jrrp.param.user": "要查询的用户 (默认为自己)",
+  "jrrp.response": "今日人品: **{score}** ({level})",
+  "jrrp.level.terrible": "极差",
+  "jrrp.level.poor": "较差",
+  "jrrp.level.average": "一般",
+  "jrrp.level.fair": "尚可",
+  "jrrp.level.good": "不错",
+  "jrrp.level.excellent": "极佳",
+  "jrrp.level.max": "今日人品爆棚"
 }

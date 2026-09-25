@@ -1,5 +1,7 @@
 {
   "version.response": "{version}",
 
-  "time.response": "{time}"
+  "time.response": "{time}",
+
+  "jrrp.response": "{name}\n{date}\n{score} ({level})\n`{identifier}`"
 }
