@@ -262,5 +262,9 @@
   "badge.error.unexpected": "❌ Unexpected error: {error}",
   "badge.result": "✅ Badge generated{size}",
 
-  "sudo.command_description": "Execute an administrative command."
+  "sudo.command_description": "Execute an administrative command.",
+
+  "xujiayin_llm.command_name": "Xu Jiayin LLM",
+  "xujiayin_llm.command_description": "空模计",
+  "xujiayin_llm.response": "I'm doing this as charity so you guys can call the API. If you can already call the API, why would I give you the real model?"
 }

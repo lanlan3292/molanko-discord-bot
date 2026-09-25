@@ -256,5 +256,9 @@
   "badge.error.unexpected": "❌ 发生意外错误: {error}",
   "badge.result": "✅ 徽章已生成{size}",
 
-  "sudo.command_description": "执行管理命令"
+  "sudo.command_description": "执行管理命令",
+
+  "xujiayin_llm.command_name": "许家印大模型",
+  "xujiayin_llm.command_description": "空模计",
+  "xujiayin_llm.response": "做公益就是为了你们调用，你们都调用了我为什么还要给你们真模型"
 }

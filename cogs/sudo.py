@@ -14,7 +14,7 @@ from utils.i18n import locale_for, t
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = os.getenv("DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data"))
 SUDOER_FILE = os.getenv("SUDOER_FILE", os.path.join(DATA_DIR, "sudoer.json"))
 
 # Discord's message limit is 2000 characters.
