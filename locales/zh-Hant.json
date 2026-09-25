@@ -228,5 +228,8 @@
   "badge.error.icon_source_conflict": "❌ 只能選擇一個圖示來源：icon、fontawesome_icon 或 thesvg_slug。若已設定 icon_mode，請只填寫與其相符的來源欄位。",
   "badge.error.processing": "❌ 徽章產生失敗: {error}",
   "badge.error.unexpected": "❌ 發生意外錯誤: {error}",
-  "badge.result": "✅ 徽章已產生{size}"
+  "badge.result": "✅ 徽章已產生{size}",
+
+  "jrrp.command_description": "查詢今日人品",
+  "jrrp.param.user": "要查詢的用戶 (預設為自己)"
 }
