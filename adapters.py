@@ -41,4 +41,6 @@ class DiscordContext(BotContext):
         return UserInfo(
             id=str(u.id),
             name=u.name,
+            username=u.name,
+            display_name=u.display_name,
         )

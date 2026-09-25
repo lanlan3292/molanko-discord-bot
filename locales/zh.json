@@ -264,7 +264,8 @@
 
   "jrrp.command_description": "查询今日人品",
   "jrrp.param.user": "要查询的用户 (默认为自己)",
-  "jrrp.response": "今日人品: **{score}** ({level})",
+  "jrrp.response": "用户 {name} 的今日人品: **{score}** ({level})",
+  "jrrp.response.target": "用户 {name} 的今日人品: **{score}** ({level})",
   "jrrp.level.terrible": "极差",
   "jrrp.level.poor": "较差",
   "jrrp.level.average": "一般",

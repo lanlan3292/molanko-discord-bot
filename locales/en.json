@@ -270,7 +270,8 @@
 
   "jrrp.command_description": "Check today's luck",
   "jrrp.param.user": "User to check (defaults to yourself)",
-  "jrrp.response": "Daily Luck: **{score}** ({level})",
+  "jrrp.response": "User {name}'s Daily Luck: **{score}** ({level})",
+  "jrrp.response.target": "User: {name}'s Daily Luck: **{score}** ({level})",
   "jrrp.level.terrible": "Terrible",
   "jrrp.level.poor": "Poor",
   "jrrp.level.average": "Average",

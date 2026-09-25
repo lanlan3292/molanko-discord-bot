@@ -38,7 +38,12 @@ class Jrrp(commands.Cog):
         ctx = DiscordContext(interaction)
         target: UserInfo | None = None
         if user is not None:
-            target = UserInfo(id=str(user.id), name=user.name)
+            target = UserInfo(
+                id=str(user.id),
+                name=user.name,
+                username=user.name,
+                display_name=user.display_name,
+            )
 
         await self.cmd.execute(ctx, target=target)
 

@@ -3,5 +3,6 @@
 
   "time.response": "{time}",
 
-  "jrrp.response": "{name}\n{date}\n{score} ({level})\n`{identifier}`"
+  "jrrp.response": "{username} `{id}`\n{date}\n{score}\n{level}\n`{identifier}`",
+  "jrrp.response.target": "target {username} `{id}`\n{username} `{id}`\n{date}\n{score}\n{level}\n`{identifier}`"
 }
