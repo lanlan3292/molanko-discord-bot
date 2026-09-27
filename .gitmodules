@@ -1,3 +1,6 @@
 [submodule "commands"]
 	path = commands
 	url = https://github.com/lanlan3292/molanko-bot-commands.git
+[submodule "scripts/terraria-player-map-renderer"]
+	path = scripts/terraria-player-map-renderer
+	url = https://github.com/lanlan3292/lanlan3292-terraria-player-map-renderer.git

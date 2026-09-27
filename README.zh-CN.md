@@ -39,27 +39,9 @@ cp .env.example discord_bot.env
 
 ### 4. Badge 命令（`/badge`）
 
-**注意:** 这**不是** Molanko 生态的项目 也**不是**由 lanlan3292 控制的项目 可能会存在一些问题
-
-如果您不需要可以执行一下命令然后直接跳到第5步
-
-```bash
-mv cogs/badge.py cogs/badge.py.disabled
-```
+**注意:** 这是来自**非** Molanko 生态 / lanlan3292 的项目 可能会存在一些问题
 
 `/badge` 命令在本地通过内置的 [Badgeworks](https://github.com/ArthurSimin/Badgeworks) 核心（`badgeworks/`，无需外部服务器或 API 密钥）生成 [Devins Badge](https://github.com/intergrav/devins-badges)，并以 PNG 附件和 SVG 源码形式发布。
-
-徽章通过 Node.js（`scripts/badge.mjs`）渲染，因此需要安装 Node 依赖（已在第 2 步的 `npm ci` 中完成）。无需额外配置。
-
-先填写两个必填文本字段，然后在 `icon` 中输入文字，即可搜索全部内置预设/Simple Icons。例如：
-
-```text
-/badge top_text:"Available on" bottom_text:"GitHub" icon:github
-/badge top_text:"Built with" bottom_text:"Python" icon:python style:compact
-/badge top_text:"Plain" bottom_text:"Text badge" logo_position:无
-/badge top_text:"Powered by" bottom_text:"Font Awesome" fontawesome_icon:"fa-brands fa-discord"
-/badge top_text:"From" bottom_text:"theSVG" thesvg_slug:docker
-```
 
 `icon` 使用本地内置图标列表。填写 `fontawesome_icon` 或 `thesvg_slug` 时会自动选择对应来源，无需同时设置 `icon_mode`。若设置了 `icon_mode`，它必须与唯一的来源字段匹配；互相冲突的来源字段会被拒绝。选择 `logo_position:无` 可生成不带图标的徽章。
 
