@@ -90,9 +90,11 @@ class PickApple(commands.Cog):
             "air": t("pickapple.quality.air", locale=locale),
         }
         quality_name = quality_names.get(quality, quality)
+        inventory_item_type = "apple" if quality in {"common", "ripe", "golden", "rotten"} else "orchard"
+        inventory_item = f"{inventory_item_type}:{quality}"
 
         try:
-            await asyncio.to_thread(self.inventory.add, interaction.user.id, quality)
+            await asyncio.to_thread(self.inventory.add, interaction.user.id, inventory_item)
         except InventoryStoreError:
             logger.exception("Failed to add picked item to inventory for user %s", interaction.user.id)
             await interaction.edit_original_response(

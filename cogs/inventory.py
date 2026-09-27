@@ -16,7 +16,7 @@ class Inventory(commands.Cog):
 
     @app_commands.command(
         name="inventory",
-        description=locale_str("View your Royal Orchard inventory", i18n_key="inventory.command_description"),
+        description=locale_str("View your inventory", i18n_key="inventory.command_description"),
     )
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def inventory_command(self, interaction: discord.Interaction):
@@ -52,16 +52,24 @@ class Inventory(commands.Cog):
 
     @staticmethod
     def _item_name(item: str, locale: str | None) -> str:
-        inventory_key = f"inventory.item.{item}"
+        namespace, separator, item_name = item.partition(":")
+        if not separator:
+            item_name = namespace
+            namespace = ""
+
+        inventory_key = f"inventory.item.{namespace}.{item_name}" if namespace else f"inventory.item.{item_name}"
         translated_name = t(inventory_key, locale=locale)
         if translated_name != inventory_key:
             return translated_name
 
-        apple_key = f"pickapple.quality.{item}"
-        translated_name = t(apple_key, locale=locale)
-        if translated_name != apple_key:
-            return translated_name
-        return item.replace("_", " ").title()
+        if namespace in {"apple", "orchard"}:
+            apple_key = f"pickapple.quality.{item_name}"
+            translated_name = t(apple_key, locale=locale)
+            if translated_name != apple_key:
+                return translated_name
+
+        readable_name = item_name.replace("_", " ").title()
+        return f"{namespace.title()}: {readable_name}" if namespace else readable_name
 
 
 async def setup(bot: commands.Bot):
