@@ -8,6 +8,13 @@
   "molanko_status.error_psutil": "The `psutil` library is not installed. Please install it to use this command.",
   "molanko_status.error_generic": "An error occurred: {error}",
 
+  "terraria_map.command_description": "Convert a Terraria .wld world file into a .map file",
+  "terraria_map.param.world_file": "Terraria world file (.wld)",
+  "terraria_map.error.unavailable": "❌ Terraria map conversion is unavailable: {reason}",
+  "terraria_map.error.invalid_file": "Please attach a Terraria world file with a .wld extension.",
+  "terraria_map.error.failed": "❌ Failed to convert this world file: {error}",
+  "terraria_map.success": "✅ Conversion succeeded. The generated world preview and .map file are attached below.",
+
   "mcavatar.command_description": "Generate a pixel-style Minecraft avatar",
   "mcavatar.param.player": "Minecraft username to use (optional if image is provided)",
   "mcavatar.param.image": "Skin image attachment (optional if player is provided)",

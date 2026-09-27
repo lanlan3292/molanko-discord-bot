@@ -1,4 +1,11 @@
 {
+  "terraria_map.command_description": "将 Terraria 的 .wld 世界文件转换为 .map 文件",
+  "terraria_map.param.world_file": "Terraria 世界文件 (.wld)",
+  "terraria_map.error.unavailable": "❌ Terraria 地图转换当前不可用：{reason}",
+  "terraria_map.error.invalid_file": "请上传后缀为 .wld 的 Terraria 世界文件。",
+  "terraria_map.error.failed": "❌ 转换失败：{error}",
+  "terraria_map.success": "✅ 转换成功，已附上预览图和 .map 文件。",
+
   "version.command_description": "显示机器人版本",
   "version.response": "当前版本: **{version}**",
 

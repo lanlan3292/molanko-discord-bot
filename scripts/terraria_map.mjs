@@ -1,7 +1,6 @@
 import { deflateSync } from '../scripts/terraria-player-map-renderer/node_modules/fflate/esm/browser.js';
 import { FileReader } from '../scripts/terraria-player-map-renderer/node_modules/terraria-world-file/dist/index.mjs';
-import { fileLoader } from '../scripts/terraria-player-map-renderer/node_modules/terraria-world-file/dist/platform/node.mjs';
-import { buildMapFromParsedWorld } from '../scripts/terraria-player-map-renderer/examples/map-from-parsed-world.mjs';
+import { createMapPreview, buildMapFromParsedWorld } from '../scripts/terraria-player-map-renderer/examples/map-from-parsed-world.mjs';
 
 async function readAllStdin() {
   return await new Promise((resolve, reject) => {
@@ -32,6 +31,7 @@ async function main() {
   });
   const parsedTiles = parser.parse({ sections: ['worldTiles'] });
   const parsedWorld = { ...parsedFile, ...parsedHeader, ...parsedTiles };
+  const preview = createMapPreview(parsedWorld);
 
   const result = await buildMapFromParsedWorld(parsedWorld, {
     compress: deflateSync,
@@ -40,6 +40,11 @@ async function main() {
   process.stdout.write(JSON.stringify({
     filename: result.fileName,
     data: Buffer.from(result.bytes).toString('base64'),
+    preview: {
+      width: preview.width,
+      height: preview.height,
+      pixels: Buffer.from(preview.pixels).toString('base64'),
+    },
   }));
 }
 

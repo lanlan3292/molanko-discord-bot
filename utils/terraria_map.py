@@ -4,7 +4,10 @@ import asyncio
 import base64
 import json
 import shutil
+from io import BytesIO
 from pathlib import Path
+
+from PIL import Image
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 TERRARIA_RENDERER_DIR = ROOT_DIR / "scripts" / "terraria-player-map-renderer"
@@ -34,7 +37,23 @@ def check_terraria_environment() -> tuple[bool, str]:
     return True, ""
 
 
-async def render_terraria_world_map(world_bytes: bytes) -> tuple[bytes, str]:
+def _make_preview_png(preview: dict) -> bytes:
+    width = preview.get("width")
+    height = preview.get("height")
+    pixels = preview.get("pixels")
+    if not isinstance(width, int) or not isinstance(height, int):
+        raise RuntimeError("Terraria preview data is missing dimensions")
+    if not isinstance(pixels, str):
+        raise RuntimeError("Terraria preview data is missing pixels")
+
+    rgba = base64.b64decode(pixels, validate=True)
+    image = Image.frombytes("RGBA", (width, height), rgba)
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+async def render_terraria_world_map(world_bytes: bytes) -> tuple[bytes, str, bytes]:
     ok, reason = check_terraria_environment()
     if not ok:
         raise RuntimeError(reason)
@@ -62,14 +81,18 @@ async def render_terraria_world_map(world_bytes: bytes) -> tuple[bytes, str]:
 
     filename = payload.get("filename")
     encoded = payload.get("data")
+    preview = payload.get("preview")
     if not isinstance(filename, str) or not filename:
         raise RuntimeError("Terraria map conversion returned no filename")
     if not isinstance(encoded, str):
         raise RuntimeError("Terraria map conversion returned no map data")
+    if not isinstance(preview, dict):
+        raise RuntimeError("Terraria map conversion returned no preview data")
 
     try:
         map_bytes = base64.b64decode(encoded, validate=True)
     except ValueError as exc:
         raise RuntimeError("Terraria map conversion returned invalid base64 data") from exc
 
-    return map_bytes, filename
+    preview_png = _make_preview_png(preview)
+    return map_bytes, filename, preview_png
