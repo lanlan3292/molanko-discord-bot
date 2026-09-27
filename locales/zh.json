@@ -2,9 +2,9 @@
   "terraria_map.command_description": "将 Terraria 的 .wld 世界文件转换为 .map 文件",
   "terraria_map.param.world_file": "Terraria 世界文件 (.wld)",
   "terraria_map.error.unavailable": "❌ Terraria 地图转换当前不可用：{reason}",
-  "terraria_map.error.invalid_file": "请上传后缀为 .wld 的 Terraria 世界文件。",
+  "terraria_map.error.invalid_file": "请上传后缀为 .wld 的 Terraria 世界文件",
   "terraria_map.error.failed": "❌ 转换失败：{error}",
-  "terraria_map.success": "✅ 转换成功，已附上预览图和 .map 文件。",
+  "terraria_map.success": "✅ 转换成功",
 
   "version.command_description": "显示机器人版本",
   "version.response": "当前版本: **{version}**",
@@ -233,6 +233,12 @@
   "pickapple.embed.description": "你从皇家果园得到了一个 **{quality}**",
   "pickapple.embed.footer": "由 {user} 摘取",
   "pickapple.error.cooldown": "你还在冷却中, 请等待 {retry_after} 秒.",
+
+  "inventory.command_description": "查看你的库存",
+  "inventory.title": "库存",
+  "inventory.empty": "库存还是空的，去摘个苹果吧！",
+  "inventory.item_count": "{item}: **{count}**",
+  "inventory.error.store": "暂时无法读取或保存库存，请稍后再试。",
 
   "badge.command_description": "生成 Devins 风格徽章",
   "badge.param.top_text": "顶部文本 (标题)",

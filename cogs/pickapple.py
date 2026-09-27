@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 import os
 import discord
@@ -6,14 +7,17 @@ from discord import app_commands
 from discord.app_commands import locale_str
 from discord.ext import commands
 
+from utils.apple_inventory import AppleInventoryStore, InventoryStoreError
 from utils.i18n import locale_for, t
 
 max_attempts = int(os.getenv("COMMAND_PICKAPPLE_MAX_ATTEMPTS", 1))
+logger = logging.getLogger(__name__)
 
 class PickApple(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.max_attempts = max_attempts
+        self.inventory = AppleInventoryStore()
 
     @app_commands.command(
         name="pickapple",
@@ -86,6 +90,16 @@ class PickApple(commands.Cog):
             "air": t("pickapple.quality.air", locale=locale),
         }
         quality_name = quality_names.get(quality, quality)
+
+        try:
+            await asyncio.to_thread(self.inventory.add, interaction.user.id, quality)
+        except InventoryStoreError:
+            logger.exception("Failed to add picked item to inventory for user %s", interaction.user.id)
+            await interaction.edit_original_response(
+                content=t("inventory.error.store", locale=locale),
+                embed=None,
+            )
+            return
 
         color_map = {
             "common": discord.Color.light_gray(),
