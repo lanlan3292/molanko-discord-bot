@@ -6,9 +6,9 @@ import threading
 from pathlib import Path
 
 
-DEFAULT_STORE_PATH = Path(__file__).resolve().parents[1] / "data" / "apple_inventory.json"
-STORE_PATH = Path(os.getenv("APPLE_INVENTORY_FILE") or DEFAULT_STORE_PATH).expanduser()
-VALID_ITEMS = {"common", "ripe", "golden", "rotten", "arthur", "sock", "watermelon", "air"}
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+DEFAULT_STORE_PATH = DATA_DIR / "inventory.json"
+STORE_PATH = Path(os.getenv("INVENTORY_FILE") or DEFAULT_STORE_PATH).expanduser()
 _lock = threading.Lock()
 
 
@@ -16,7 +16,7 @@ class InventoryStoreError(Exception):
     """Raised when the inventory cannot be read or persisted safely."""
 
 
-class AppleInventoryStore:
+class InventoryStore:
     def __init__(self, path: Path = STORE_PATH):
         self.path = path
 
@@ -38,7 +38,11 @@ class AppleInventoryStore:
             valid_counts = {
                 item: count
                 for item, count in items.items()
-                if item in VALID_ITEMS and isinstance(count, int) and not isinstance(count, bool) and count > 0
+                if isinstance(item, str)
+                and item.strip()
+                and isinstance(count, int)
+                and not isinstance(count, bool)
+                and count > 0
             }
             if valid_counts:
                 inventory[user_id] = valid_counts
@@ -61,8 +65,8 @@ class AppleInventoryStore:
             raise InventoryStoreError("Could not save inventory") from exc
 
     def add(self, user_id: int, item: str) -> None:
-        if item not in VALID_ITEMS:
-            raise ValueError(f"Unknown inventory item: {item}")
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError("Inventory item IDs must be nonempty strings")
         with _lock:
             inventory = self._load()
             user_items = inventory.setdefault(str(user_id), {})

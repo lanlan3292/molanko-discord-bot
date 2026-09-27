@@ -236,7 +236,7 @@
 
   "inventory.command_description": "查看你的库存",
   "inventory.title": "库存",
-  "inventory.empty": "库存还是空的，去摘个苹果吧！",
+  "inventory.empty": "你的库存还是空的。",
   "inventory.item_count": "{item}: **{count}**",
   "inventory.error.store": "暂时无法读取或保存库存，请稍后再试。",
 

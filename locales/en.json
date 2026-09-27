@@ -242,7 +242,7 @@
 
   "inventory.command_description": "View your inventory",
   "inventory.title": "Inventory",
-  "inventory.empty": "Your inventory is empty. Pick an apple to get started!",
+  "inventory.empty": "Your inventory is empty.",
   "inventory.item_count": "{item}: **{count}**",
   "inventory.error.store": "Your inventory could not be accessed. Please try again later.",
 

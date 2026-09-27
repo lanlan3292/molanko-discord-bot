@@ -5,14 +5,14 @@ from discord import app_commands
 from discord.app_commands import locale_str
 from discord.ext import commands
 
-from utils.apple_inventory import AppleInventoryStore, InventoryStoreError
+from utils.inventory import InventoryStore, InventoryStoreError
 from utils.i18n import locale_for, t
 
 
 class Inventory(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.inventory = AppleInventoryStore()
+        self.inventory = InventoryStore()
 
     @app_commands.command(
         name="inventory",
@@ -35,7 +35,7 @@ class Inventory(commands.Cog):
                 t(
                     "inventory.item_count",
                     locale=locale,
-                    item=t(f"pickapple.quality.{item}", locale=locale),
+                    item=self._item_name(item, locale),
                     count=count,
                 )
                 for item, count in sorted(items.items())
@@ -49,6 +49,19 @@ class Inventory(commands.Cog):
             color=discord.Color.green(),
         )
         await interaction.response.send_message(embed=embed)
+
+    @staticmethod
+    def _item_name(item: str, locale: str | None) -> str:
+        inventory_key = f"inventory.item.{item}"
+        translated_name = t(inventory_key, locale=locale)
+        if translated_name != inventory_key:
+            return translated_name
+
+        apple_key = f"pickapple.quality.{item}"
+        translated_name = t(apple_key, locale=locale)
+        if translated_name != apple_key:
+            return translated_name
+        return item.replace("_", " ").title()
 
 
 async def setup(bot: commands.Bot):

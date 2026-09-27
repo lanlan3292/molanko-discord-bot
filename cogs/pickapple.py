@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.app_commands import locale_str
 from discord.ext import commands
 
-from utils.apple_inventory import AppleInventoryStore, InventoryStoreError
+from utils.inventory import InventoryStore, InventoryStoreError
 from utils.i18n import locale_for, t
 
 max_attempts = int(os.getenv("COMMAND_PICKAPPLE_MAX_ATTEMPTS", 1))
@@ -17,7 +17,7 @@ class PickApple(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.max_attempts = max_attempts
-        self.inventory = AppleInventoryStore()
+        self.inventory = InventoryStore()
 
     @app_commands.command(
         name="pickapple",
