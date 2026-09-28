@@ -29,7 +29,26 @@ try {
   process.exit(1);
 }
 
+function readStdin() {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    process.stdin.on('data', (c) => chunks.push(c));
+    process.stdin.on('end', () => resolve(Buffer.concat(chunks)));
+    process.stdin.on('error', reject);
+    process.stdin.resume();
+  });
+}
+
 (async () => {
+  // Upload mode: image bytes arrive on stdin (argv has a size limit, so we
+  // can't embed a large base64 data URL in the config JSON).
+  if (cfg.iconMode === 'upload' && !cfg.imageDataUrl) {
+    const buf = await readStdin();
+    const mime = cfg.imageMimeType || 'image/png';
+    cfg.imageDataUrl = `data:${mime};base64,${buf.toString('base64')}`;
+    delete cfg.imageMimeType;
+  }
+
   const svg = await generateBadge(cfg);
 
   // SVG mode still returns the raw markup for parity with other scripts.

@@ -107,6 +107,7 @@ def _build_config(
     icon_mode: Optional[app_commands.Choice[str]],
     fontawesome_icon: Optional[str],
     thesvg_slug: Optional[str],
+    image: Optional[discord.Attachment],
     background_top: Optional[str],
     background_bottom: Optional[str],
     text_color: Optional[str],
@@ -133,6 +134,7 @@ def _build_config(
         "preset": bool(icon and icon.strip()),
         "fontawesome": bool(fontawesome_icon and fontawesome_icon.strip()),
         "thesvg": bool(thesvg_slug and thesvg_slug.strip()),
+        "upload": image is not None,
     }
     selected_sources = [source for source, provided in provided_sources.items() if provided]
 
@@ -141,17 +143,21 @@ def _build_config(
     if explicit_mode and selected_sources and selected_sources[0] != explicit_mode:
         raise BadgeValidationError("badge.error.icon_source_conflict")
 
-    mode = explicit_mode or (selected_sources[0] if selected_sources else "preset")
+    mode = explicit_mode or (selected_sources[0] if selected_sources else None)
     if mode == "fontawesome":
         cfg["iconMode"] = "fontawesome"
         cfg["faIconClass"] = (
-            fontawesome_icon or "fa-brands fa-github"
+            fontawesome_icon or "fa-solid fa-b"
         ).strip()
     elif mode == "thesvg":
         cfg["iconMode"] = "thesvg"
         cfg["thesvgSlug"] = (thesvg_slug or "github").strip().lower()
-    else:
+    elif mode == "upload":
+        cfg["iconMode"] = "upload"
+    elif mode == "preset":
         cfg["iconMode"] = "preset"
+    # No icon source specified: leave iconMode unset so the renderer uses its
+    # default badge (the Badgeworks "b" mark on the blue gradient).
 
     if background_top or background_bottom:
         cfg["bgStops"] = [
@@ -184,7 +190,7 @@ async def icon_autocomplete(
     return [app_commands.Choice(name=name, value=name) for name in matches[:25]]
 
 
-async def render_badge_nodejs(config: dict) -> tuple[bytes, str, Optional[int], Optional[int]]:
+async def render_badge_nodejs(config: dict, image_data: Optional[bytes] = None) -> tuple[bytes, str, Optional[int], Optional[int]]:
     """Invoke the Node.js renderer, returning (png_bytes, svg, width, height)."""
     config_json = json.dumps(config, ensure_ascii=False)
 
@@ -192,13 +198,14 @@ async def render_badge_nodejs(config: dict) -> tuple[bytes, str, Optional[int], 
         "node",
         str(SCRIPT_PATH),
         config_json,
+        stdin=subprocess.PIPE if image_data is not None else None,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
 
     try:
         stdout, stderr = await asyncio.wait_for(
-            proc.communicate(), timeout=RENDER_TIMEOUT_SECONDS
+            proc.communicate(input=image_data), timeout=RENDER_TIMEOUT_SECONDS
         )
     except asyncio.TimeoutError as e:
         proc.kill()
@@ -293,6 +300,10 @@ class BadgeCog(commands.Cog):
             "theSVG icon slug, e.g. github (used when source is theSVG)",
             i18n_key="badge.param.thesvg_slug",
         ),
+        image=locale_str(
+            "Image attachment (PNG/JPG/SVG) to use as the badge logo",
+            i18n_key="badge.param.image",
+        ),
         background_top=locale_str(
             "Top background color as #RRGGBB",
             i18n_key="badge.param.background_top",
@@ -335,6 +346,7 @@ class BadgeCog(commands.Cog):
         icon_mode: Optional[app_commands.Choice[str]] = None,
         fontawesome_icon: Optional[str] = None,
         thesvg_slug: Optional[str] = None,
+        image: Optional[discord.Attachment] = None,
         background_top: Optional[str] = None,
         background_bottom: Optional[str] = None,
         text_color: Optional[str] = None,
@@ -368,6 +380,7 @@ class BadgeCog(commands.Cog):
                 icon_mode,
                 fontawesome_icon,
                 thesvg_slug,
+                image,
                 background_top,
                 background_bottom,
                 text_color,
@@ -383,10 +396,32 @@ class BadgeCog(commands.Cog):
             )
             return
 
+        image_data: Optional[bytes] = None
+        if image is not None:
+            if not image.content_type or not image.content_type.startswith("image/"):
+                await interaction.response.send_message(
+                    t("badge.error.image_invalid", locale=locale),
+                    ephemeral=True,
+                )
+                return
+
         await interaction.response.defer(thinking=True)
 
+        if image is not None:
+            try:
+                image_data = await image.read()
+                config["imageMimeType"] = image.content_type or "image/png"
+            except Exception as e:
+                await interaction.followup.send(
+                    t("badge.error.image_read", locale=locale, error=e),
+                    ephemeral=True,
+                )
+                return
+
         try:
-            png_bytes, svg, width, height = await render_badge_nodejs(config)
+            png_bytes, svg, width, height = await render_badge_nodejs(
+                config, image_data
+            )
         except BadgeProcessingError as e:
             await interaction.followup.send(
                 t("badge.error.processing", locale=locale, error=e),
